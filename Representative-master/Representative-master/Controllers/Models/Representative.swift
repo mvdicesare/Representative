@@ -8,7 +8,7 @@
 
 import Foundation
 
-struct Representative: Codable {
+struct Representive: Codable {
     let name: String
     let party: String
     let state: String
@@ -17,3 +17,4 @@ struct Representative: Codable {
     let office: String
     let link: String
 }
+

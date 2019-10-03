@@ -10,7 +10,7 @@ import UIKit
 
 class RepresentativeTableViewCell: UITableViewCell {
     
-    var representative: Representative? {
+    var representative: Representive? {
         didSet {
             updateViews()
         }

@@ -8,42 +8,62 @@
 
 import Foundation
 
+
+struct SharedConstant {
+    fileprivate static let baseURL = "http://whoismyrepresentative.com/getall_reps_bystate.php"
+    fileprivate static let searchComponet = "sens"
+    fileprivate static let state = "state"
+    fileprivate static let output = "output"
+    fileprivate static let json = "json"
+}
+    
 class RepresentativeController {
-    
-    static let baseURL = URL(string: "http://whoismyrepresentative.com/getall_reps_bystate.php")
-    
-    static func searchRepresentatives(forState state: String, completion: @escaping (([Representative]) -> Void)) {
-        guard let url = baseURL else { completion([]); return }
+ 
+    static func searchRepresientatives(forState state: String, completion: @escaping (([Representive]) -> Void)) {
+        guard let baseURL = URL(string: SharedConstant.baseURL) else {completion([]); return}
+       
+        guard var components = URLComponents(url: baseURL, resolvingAgainstBaseURL: true)
+            else {completion([]); return}
+        let stateQuery = URLQueryItem(name: SharedConstant.state, value: state.lowercased())
+        let jsonQuery = URLQueryItem(name: SharedConstant.output, value: SharedConstant.json)
         
-        let stateQuery = URLQueryItem(name: "state", value: state.lowercased())
-        let jsonQuery = URLQueryItem(name: "output", value: "json")
-        var components = URLComponents(url: url, resolvingAgainstBaseURL: true)
-        components?.queryItems = [stateQuery, jsonQuery]
-        guard let requestURL = components?.url else { completion([]); return }
+        components.queryItems = [stateQuery, jsonQuery]
         
-        let dataTask = URLSession.shared.dataTask(with: requestURL) { (data, _, error) in
+        guard let finalURL = components.url else {
+            print("compnets have an issue")
+            completion([])
+            return
+        }
+        
+        let dataTask = URLSession.shared.dataTask(with: finalURL) { (data, _, error) in
             if let error = error {
-                print("Error getting representatives: \(error.localizedDescription)")
+                print("Error in \(#function) : \(error.localizedDescription) \n---\n \(error)")
                 completion([])
                 return
             }
             guard let data = data,
                 let responseDataString = String(data: data, encoding: .ascii),
-                let fixedData = responseDataString.data(using: .utf8)
-                else { completion([]); return }
-            
-            let jsonDecoder = JSONDecoder()
-            
-            do {
-                let resultsDictionary = try jsonDecoder.decode([String: [Representative]].self, from: fixedData)
-                let repArray = resultsDictionary["results"]
-                completion(repArray ?? [])
-            } catch {
-                print("Error decoding json: \(error.localizedDescription)")
+                let fixedData = responseDataString.data(using: .utf8) else {
+                print("data error ")
                 completion([])
                 return
             }
+            let jsonDecoder = JSONDecoder()
+            
+            do {
+                let representive = try jsonDecoder.decode([String: [Representive]].self, from: fixedData)
+                let newArray = representive["results"]
+                completion(newArray ?? [])
+            } catch {
+                print("error with data")
+                completion([])
+                return
+            }
+        
         }
         dataTask.resume()
     }
-}
+    
+} // end of class
+
+
